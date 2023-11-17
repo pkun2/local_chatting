@@ -5,10 +5,11 @@ html
 
   body
     h1 로그인
+    div=error
 
-    form(action="/login" method="post")
-      label(for="username") 사용자 이름:
-      input(type="text" id="username" name="username" placeholder="사용자 이름" required)
+    form(action="/user/login" method="post")
+      label(for="email") 이메일:
+      input(type="text" id="email" name="email" placeholder="사용자 이름" required)
 
       label(for="password") 비밀번호:
       input(type="password" id="password" name="password" placeholder="비밀번호" required)

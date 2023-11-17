@@ -1,16 +1,22 @@
-import admin from "firebase-admin";
-import serviceAccount from "../i-dont-know-chat-firebase-adminsdk-hddfm-84d128f814.json"
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth"
+import "firebase/compat/database"
 // Fetch the service account key JSON file contents
 
-// Initialize the app with a custom auth variable, limiting the server's access
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  // The database URL depends on the location of the database
-  databaseURL: "https://i-dont-know-chat-default-rtdb.firebaseio.com/",
-  databaseAuthVariableOverride: {
-    uid: "pkun"
-  }
-});
-// The app only has access as defined in the Security Rules
-const db = admin.database();
-export default db;
+const firebaseConfig = {
+  apiKey: "AIzaSyCS35uDckRiNGOQkXTaxzdrUpvcKT8iQlg",
+  authDomain: "i-dont-know-chat.firebaseapp.com",
+  databaseURL: "https://i-dont-know-chat-default-rtdb.firebaseio.com",
+  projectId: "i-dont-know-chat",
+  storageBucket: "i-dont-know-chat.appspot.com",
+  messagingSenderId: "406641026438",
+  appId: "1:406641026438:web:a46fedeb94836fed023807",
+  measurementId: "G-FD97QM1ZNW"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+export const auth = firebase.auth();
+export const rtDB = firebase.database();
+
+

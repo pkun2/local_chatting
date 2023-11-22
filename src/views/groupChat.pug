@@ -4,3 +4,7 @@ html(lang="en")
     title= "그룹채팅방 리스트"
   body
     h1 그룹채팅
+    ul
+      each chatName, id in chatNameList, idList
+        li
+          a(href=`/chatroom/${id}`)= chatName

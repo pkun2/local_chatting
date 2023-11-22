@@ -7,7 +7,7 @@ import userRouter from "./router/userRouter";
 
 const app = express();
 
-let maxAge = 5 * 60 * 1000;
+let maxAge = 5 * 60 * 100 * 1000;
 
 app.use(session({
     secret: "asjdha@#as734SDg",

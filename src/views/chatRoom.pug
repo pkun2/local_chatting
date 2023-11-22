@@ -9,7 +9,9 @@ html(lang="en")
     ul
       each chat in messageList
         div(class=chat.user === currentUser ? 'right-message' : 'left-message')
-          | #{chat.user}: #{chat.message}
+          | #{chat.user}: 
+          | <br>
+          | #{chat.message}
       form(action=`/chatroom/${id}` method="post")
         label(for="message") 메시지 입력:
         input(type="text" id="message" name="message" placeholder="메시지를 입력하세요" required)

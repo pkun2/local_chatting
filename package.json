@@ -1,0 +1,33 @@
+{
+  "name": "local_chatting",
+  "version": "1.0.0",
+  "description": "지역간 그룹을 결성하여 채팅하고 모임을 가질 수 있는 채팅입니다.",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node src/init.js"
+  },
+  "author": "pkun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pkun2/wetube-reloaded/issues"
+  },
+  "homepage": "https://github.com/pkun2/local_chatting#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "connect-mongo": "^4.6.0",
+    "dotenv": "^14.2.0",
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "mongoose": "^6.1.4",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.6.1",
+    "pug": "^3.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/node": "^7.14.7",
+    "@babel/preset-env": "^7.14.7",
+    "nodemon": "^2.0.12"
+  }
+}

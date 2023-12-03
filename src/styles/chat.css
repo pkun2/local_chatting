@@ -1,0 +1,9 @@
+/* CSS 파일 또는 <style> 태그 내부에서 추가 */
+.left-message {
+    text-align: left;
+    margin-right: 50%;
+}
+.right-message {
+    text-align: right;
+    margin-left: 50%;
+}

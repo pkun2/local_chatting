@@ -11,7 +11,11 @@ const httpServer = http.createServer(app);
 const ioServer = new Server(httpServer);
 
 ioServer.on("connection", (socket)=>{
-    console.log(socket);
+    console.log('채팅 서버에 접속되었습니다');
+
 });
+
+// 이렇게 해주면 라우터에서 Socket.io를 사용할 수 있다.
+app.set('ioServer', ioServer)
 
 httpServer.listen(PORT, handleListening);

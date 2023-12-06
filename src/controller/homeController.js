@@ -2,13 +2,37 @@ import axios from "axios";
 import { rtDB } from "../firebase";
 import admin from "firebase-admin";
 
-export const home = (req, res) => {
+export const home = async(req, res) => {
     const isLogin = req.session.user;
-    const city = req.session.city || '현재 위치를 불러올 수 없음';
+    const city = req.session.city;
 
-    console.log('city:', city);
-    return res.render("home", { isLogin, city });
+    const chatList = await getChatroomNamesByCity(city);
+
+    return res.render("home", { isLogin, city, chatList });
 }
+
+const getChatroomNamesByCity = async (cityName) => {
+    const rootRef = rtDB.ref();
+    const snapshot = await rootRef.once('value');
+  
+    const chatrooms = [];
+
+    snapshot.forEach(userSnapshot => {
+        userSnapshot.forEach(chatroomSnapshot => {
+            const chatroom = chatroomSnapshot.val();
+            if (chatroom && chatroom.name && chatroom.city === cityName) {
+                //중복되어 리스트가 저장되는 것을 해결해야 함
+                chatrooms.push({
+                    name: chatroom.name,
+                    key: chatroomSnapshot.key
+                });
+            }
+        });
+    });
+    return chatrooms;
+};
+
+
 export const sendLocation = async(req, res) => {
     const { latitude, longitude } = req.body;
     const location = await reverseGeocode(latitude, longitude);
@@ -19,9 +43,9 @@ export const sendLocation = async(req, res) => {
     return res.redirect('/');
 };
 
-const extractCityFromAddress = (location) => {
+const extractCityFromAddress = (location) => { // 한국 주소에서 도시 이름을 찾는 함수
     const parts = location.split(',').map(part => part.trim());
-    // 한국 주소에서 도시 이름을 찾는 로직
+    
     const cityPart = parts.find(part => part.endsWith('si') || part.endsWith('gun'));
   
     return cityPart || '잘못된 형식의 도시 이름입니다.';
@@ -147,12 +171,13 @@ export const getAddChatroom = (req, res) => {
 }
 
 export const postAddChatroom = async (req, res) => {
-    console.log(req.body);
     const user = req.session.user;
     const chatName = req.body.name;
+    const city = req.session.city;
     const ref = rtDB.ref(`/${user.uid}`);
     const usersRef = ref.push({
-        name: chatName
+        name: chatName,
+        city: city
     });
     const chatId = usersRef.key;
 

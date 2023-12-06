@@ -18,8 +18,17 @@ html(lang="en")
       a(href="user/register")
         button(type="button") 회원가입
     
+    p(id="location")
     p 현재 위치: #{city}
+    if isLogin
+      div
+        each chatroom in chatList
+          li
+            a(href=`/chatroom/${chatroom.key}`)= chatroom.name
     script.
+      window.onload = function() {
+        getLocation();
+      };
       function getLocation() {
           if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(showPosition, showError);
@@ -71,5 +80,4 @@ html(lang="en")
         });
       }
 
-      // 페이지 로드 시 위치 정보 가져오기
-      window.onload = getLocation;
+      

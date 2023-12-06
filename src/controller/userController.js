@@ -64,3 +64,8 @@ export const postRegister = (req, res) => {
     }
     //post method 처리
 }
+
+export const logout = (req, res) => {
+    req.session.destroy();
+    return res.redirect("/");
+};

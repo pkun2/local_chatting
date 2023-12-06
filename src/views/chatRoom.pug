@@ -5,7 +5,9 @@ html(lang="en")
     link(rel="stylesheet", href="/src/styles/chat.css")
       
   body
-    h1 채팅방 #{currentUser}
+    h1 
+      a(href="/") 홈
+    h2 채팅방 #{chatName}
     ul
       each chat in messageList
         div(class=chat.user === currentUser ? 'right-message' : 'left-message')
@@ -21,8 +23,8 @@ html(lang="en")
   // Socket.io 스크립트 연결
   script(src="/socket.io/socket.io.js") 
   script.
-  var socket = io.connect('http://localhost:4885');
+    var socket = io.connect('http://localhost:4885');
 
   socket.on('postchat', function (user, message) {
-  });
+  })
           

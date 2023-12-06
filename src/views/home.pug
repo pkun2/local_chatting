@@ -4,3 +4,72 @@ html(lang="en")
     title= "홈페이지"
   body
     h1 홈
+    if isLogin
+      div 
+        a(href="addchatroom")
+          button(type="button") 채팅방 생성
+        a(href="groupchat")
+          button(type="button") 내 채팅방 가기
+        a(href="user/logout")
+          button(type="button") 로그아웃
+    else
+      a(href="user/login")
+        button(type="button") 로그인
+      a(href="user/register")
+        button(type="button") 회원가입
+    
+    p 현재 위치: #{city}
+    script.
+      function getLocation() {
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(showPosition, showError);
+          } else {
+              document.getElementById("location").innerHTML = "Geolocation is not supported by this browser.";
+          }
+      }
+
+      function showPosition(position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          document.getElementById("location").innerHTML = "Latitude: " + latitude + 
+          "<br>Longitude: " + longitude;
+
+          // 서버로 위치 정보를 전송
+          sendLocationToServer(latitude, longitude);
+      }
+
+      function showError(error) {
+          switch(error.code) {
+              case error.PERMISSION_DENIED:
+                  document.getElementById("location").innerHTML = "User denied the request for Geolocation.";
+                  break;
+              case error.POSITION_UNAVAILABLE:
+                  document.getElementById("location").innerHTML = "Location information is unavailable.";
+                  break;
+              case error.TIMEOUT:
+                  document.getElementById("location").innerHTML = "The request to get user location timed out.";
+                  break;
+              case error.UNKNOWN_ERROR:
+                  document.getElementById("location").innerHTML = "An unknown error occurred.";
+                  break;
+          }
+      }
+
+      function sendLocationToServer(latitude, longitude) {
+        fetch('/send-location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ latitude, longitude }),
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+      }
+
+      // 페이지 로드 시 위치 정보 가져오기
+      window.onload = getLocation;

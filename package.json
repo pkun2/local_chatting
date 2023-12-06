@@ -13,6 +13,7 @@
   },
   "homepage": "https://github.com/pkun2/local_chatting#readme",
   "dependencies": {
+    "axios": "^1.6.2",
     "bcrypt": "^5.0.1",
     "connect-mongo": "^4.6.0",
     "dotenv": "^14.2.0",

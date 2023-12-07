@@ -21,7 +21,6 @@ const getChatroomNamesByCity = async (cityName) => {
         userSnapshot.forEach(chatroomSnapshot => {
             const chatroom = chatroomSnapshot.val();
             if (chatroom && chatroom.name && chatroom.city === cityName) {
-                //중복되어 리스트가 저장되는 것을 해결해야 함
                 chatrooms.push({
                     name: chatroom.name,
                     key: chatroomSnapshot.key
@@ -70,7 +69,7 @@ const reverseGeocode = async(latitude, longitude) => {
     }
   }
 
-export const groupchat = async (req, res) => {
+  export const groupchat = async (req, res) => {
     try {
         const user = req.session.user;
         if (!user) {
@@ -81,90 +80,104 @@ export const groupchat = async (req, res) => {
         const messagesList = [];
         const idList = [];
         
-        const ref = rtDB.ref(`/${user.uid}`);
-        const snapshot = await ref.once('value');
+        // '/chatrooms' 경로에서 모든 채팅방을 순회
+        const chatroomsRef = rtDB.ref('/chatrooms');
+        const chatroomsSnapshot = await chatroomsRef.once('value');
         
-        snapshot.forEach((childSnapshot) => {
-            const chat = childSnapshot.val();
-
-            // chat이 null이거나 undefined인 경우를 처리
-            if (!chat || typeof chat.name === 'undefined') {
-                return; // 이 경우 해당 반복을 건너뛰고 다음 childSnapshot으로 넘어갑니다.
+        chatroomsSnapshot.forEach(chatroomSnapshot => {
+            const chatroom = chatroomSnapshot.val();
+            // createdBy 필드가 현재 사용자의 이메일과 일치하는 경우
+            if (chatroom && chatroom.createdBy === user.email) {
+                chatNameList.push(chatroom.name);
+                const messages = chatroom.messages ? Object.values(chatroom.messages) : [];
+                messagesList.push(messages);
+                idList.push(chatroomSnapshot.key);
             }
-            chatNameList.push(chat.name);
-            
-            const messages = chat.messages ? Object.values(chat.messages) : [];
-            messagesList.push(messages);
         });
-        idList.push(Object.keys(snapshot.val()));
-        const refinedIdList = idList[0];
-        console.log(refinedIdList);
 
-        return res.render("groupChat", { chatNameList, refinedIdList, messagesList });
+        return res.render("groupChat", { chatNameList, idList, messagesList });
     } catch (error) {
         console.error('Error:', error);
         return res.status(500).send('Internal Server Error');
     }
 };
-
 
 export const getChatroom = async (req, res) => {
     try {
         if (!req.session.user) {
             return res.redirect('/user/login');
         }
-        const id = req.params.id;
-        const user = req.session.user;
+
+        const chatroomId = req.params.id; // URL로부터 채팅방 ID 가져오기
         const messageList = [];
 
-        const ref = rtDB.ref(`/${user.uid}/${id}`);
-        const messagesRef = ref.child('messages');
+        // '/chatrooms/{chatroomId}' 경로를 사용하여 채팅방 정보 조회
+        const chatRoomRef = rtDB.ref(`/chatrooms/${chatroomId}`);
+        const chatRoomSnapshot = await chatRoomRef.once('value');
+        const chatRoomData = chatRoomSnapshot.val();
 
-        // once 메소드를 사용하여 한 번만 데이터를 읽어옴
-        const snapshot = await messagesRef.once('value');
-        
-        snapshot.forEach((childSnapshot) => {
-            const wrappedMessage = childSnapshot.val();
-            messageList.push(wrappedMessage);
-        });
-        const currentUser = user.email;
+        if (!chatRoomData) {
+            return res.status(404).send('Chatroom not found');
+        }
 
-        // chatName을 가져오기 전에 snapshot의 부모 노드를 참조
-        const chatRoomSnapshot = await ref.once('value');
-        const chatName = chatRoomSnapshot.val() ? chatRoomSnapshot.val().name : 'Unknown';
+        // 메시지 데이터 추출
+        if (chatRoomData.messages) {
+            Object.values(chatRoomData.messages).forEach(message => {
+                messageList.push(message);
+            });
+        }
 
-        return res.render("chatroom", { messageList, currentUser, chatName, id });
+        const chatName = chatRoomData.name || 'Unknown';
+        const currentUser = req.session.user.email;
+
+        return res.render("chatroom", { messageList, currentUser, chatName, id: chatroomId });
     } catch (error) {
         console.error('Error:', error);
         return res.status(500).send('Internal Server Error');
     }
 };
 
-
-
-
-export const postChatroom = (req, res) => {
-    const id = req.params.id;
+export const postChatroom = async (req, res) => {
+    const chatroomName = req.body.chatName;
     const user = req.session.user;
     const message = req.body.message;
 
-    const ref = rtDB.ref(`/${user.uid}/${id}`); 
+    try {
+        const chatroomsRef = rtDB.ref('/chatrooms');
+        const chatroomsSnapshot = await chatroomsRef.once('value');
+        let chatroomId = null;
 
-    const usersRef = ref.child('messages');
+        // 모든 채팅방을 순회하며 해당 채팅방 이름을 찾기
+        chatroomsSnapshot.forEach(chatroomSnapshot => {
+            const chatroom = chatroomSnapshot.val();
+            if (chatroom.name === chatroomName) {
+                chatroomId = chatroomSnapshot.key;
+                return true; // 순회 중지
+            }
+        });
 
-    usersRef.push({
-        message: message,
-        user: user.email,
-        timestamp: admin.database.ServerValue.TIMESTAMP
-    });
+        if (!chatroomId) {
+            return res.status(404).send('Chatroom not found');
+        }
 
-     // 전역변수로 등록해논 io객체를 가져온다
-    const ioServer = req.app.get('ioServer');
-    // post요청하는 url에 포함된 param인 id를 기준으로 socket.io내부에서 라우팅하여 관련된 id에 join해 있는 소켓들에게만 'chat' 이벤트를 보내준다
-    ioServer.to(id).emit('postchat', user.email, message);
+        // 메시지 게시
+        const messagesRef = rtDB.ref(`/chatrooms/${chatroomId}/messages`);
+        messagesRef.push({
+            message: message,
+            user: user.email,
+            timestamp: admin.database.ServerValue.TIMESTAMP
+        });
 
-    return res.redirect(`/chatroom/${id}`);
-}
+        // socket.io를 사용하여 채팅 이벤트 전송
+        const ioServer = req.app.get('ioServer');
+        ioServer.to(chatroomId).emit('postchat', user.email, message);
+
+        return res.redirect(`/chatroom/${chatroomId}`);
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).send('Internal Server Error');
+    }
+};
 
 export const getAddChatroom = (req, res) => {
     return res.render("addChatroom");
@@ -173,15 +186,20 @@ export const getAddChatroom = (req, res) => {
 export const postAddChatroom = async (req, res) => {
     const user = req.session.user;
     const chatName = req.body.name;
-    const city = req.session.city;
-    const ref = rtDB.ref(`/${user.uid}`);
-    const usersRef = ref.push({
+    const city = req.session.city || 'Unknown'; // 세션에 도시 정보가 없는 경우를 대비
+
+    // '/chatrooms' 경로에 새 채팅방 추가
+    const chatroomsRef = rtDB.ref('/chatrooms');
+    const newChatroomRef = chatroomsRef.push({
         name: chatName,
-        city: city
+        messages: null,
+        city: city,
+        createdBy: user.email // 채팅방을 생성한 사용자 정보 추가
     });
-    const chatId = usersRef.key;
+    const chatId = newChatroomRef.key;
 
     return res.redirect(`/chatroom/${chatId}`);
-}
+};
+
 
 

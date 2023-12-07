@@ -14,17 +14,19 @@ html(lang="en")
           | #{chat.user}: 
           | <br>
           | #{chat.message}
+
       form(action=`/chatroom/${id}` method="post")
         label(for="message") 메시지 입력:
         input(type="text" id="message" name="message" placeholder="메시지를 입력하세요" required)
-
+        // 숨겨진 입력 필드 추가
+        input(type="hidden" name="chatName" value=chatName)
+        
         button(type="submit") 전송
 
-  // Socket.io 스크립트 연결
   script(src="/socket.io/socket.io.js") 
   script.
     var socket = io.connect('http://localhost:4885');
 
-  socket.on('postchat', function (user, message) {
-  })
-          
+    socket.on('postchat', function (user, message) {
+      // 메시지 처리 로직 추가
+    })

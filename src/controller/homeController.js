@@ -74,5 +74,10 @@ export const postChatroom = (req, res) => {
         timestamp: admin.database.ServerValue.TIMESTAMP
     });
 
+     // 전역변수로 등록해논 io객체를 가져온다
+    const ioServer = req.app.get('ioServer');
+    // post요청하는 url에 포함된 param인 id를 기준으로 socket.io내부에서 라우팅하여 관련된 id에 join해 있는 소켓들에게만 'chat' 이벤트를 보내준다
+    ioServer.to(id).emit('postchat', user.email, message);
+
     return res.redirect(`/chatroom/${id}`);
 }
